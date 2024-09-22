@@ -72,12 +72,15 @@ int main() {
 	fprintf(fptr,"NumIntervals,NumThreads,PiValue,ElaspsedTime(s)\n");
 	
 	int choose_intervals[] = {10000000,100000000,1000000000};
+	//int choose_intervals[] = {10000000};
 	
 	for(int i=0;i<3;i++){
 		for (int threads=1;threads<=10;threads++){
 			double *results= run_pi_calculate(choose_intervals[i],threads);
 			printf("Intervals: %d,Threads:%d,pi:%.15f,Time:%.06f s\n",choose_intervals[i],threads,results[0],results[1]);
 			fprintf(fptr,"%d,%d,%.15f,%.06f\n",choose_intervals[i],threads,results[0],results[1]);
+			fflush(fptr);
+			free(results);
 		}
 	}
 	
