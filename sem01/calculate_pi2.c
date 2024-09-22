@@ -79,9 +79,9 @@ int main() {
 			printf("Intervals: %d,Threads:%d,pi:%.15f,Time:%.06f s\n",choose_intervals[i],threads,results[0],results[1]);
 			fprintf(fptr,"%d,%d,%.15f,%.06f\n",choose_intervals[i],threads,results[0],results[1]);
 		}
-		
-	fclose(fptr);
 	}
+	
+	fclose(fptr);
 	printf("Results are saved to file\n");
 	return 0; 
 } 
