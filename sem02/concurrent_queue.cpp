@@ -10,31 +10,36 @@
 
 template<typename T> 
 class MyConcurrentQueue { 
-public: 
-MyConcurrentQueue(size_t capacity) : capacity(capacity), item_count(0) {} 
 
-	void put(int id, int count) { 
+public: 
+	MyConcurrentQueue(size_t capacity) : capacity(capacity), done(false) {} 
+
+	void put(int id, const std::vector<T>& items) { 
 		std::unique_lock<std::mutex> lock(mtx); 
 
-		cond_full.wait(lock, [this] { return item_count <= 1; }); 
-
-		item_count += count; 
-		std::cout << "Producer " << id << " produced 15 items, total items: " << item_count << std::endl; 
+		cond_full.wait(lock, [this, &items] { return queue.size() + items.size() <= capacity; }); 
+		
+		for (const auto & item:items){
+			queue.push(item);
+		}
+		
+		std::cout << "Producer " << id << " produced "<< items.size() << " items, total items: " << queue.size() << std::endl; 
 		cond_empty.notify_all(); 
 	} 
 
-	bool get(int id) { 
+	bool get(int id , T & item) { 
 		std::unique_lock<std::mutex> lock(mtx); 
 
-		cond_empty.wait(lock, [this] { return item_count > 0 || done; }); 
-		if (item_count == 0 && done){
+		cond_empty.wait(lock, [this] { return !queue.empty() || done; }); 
+		if (queue.empty() && done){
 			return false;
 		}
-		item_count--; 
-		std::cout << "Consumer " << id << " consumed 1 item, remaining items: " << item_count << std::endl; 
-		if (item_count <= 1) { 
+		item =queue.front();
+		queue.pop();
+		std::cout << "Consumer " << id << " consumed 1 item, remaining items: " << queue.size() << std::endl; 
+ 
 		cond_full.notify_all(); 
-		} 
+	
 		return true;
 	} 
 	
@@ -44,13 +49,8 @@ MyConcurrentQueue(size_t capacity) : capacity(capacity), item_count(0) {}
 		cond_empty.notify_all();
 	}
 	
-
-	int get_item_count() { 
-	std::lock_guard<std::mutex> lock(mtx); 
-	return item_count; 
-	} 
-
-	private: 
+private: 
+	std::queue<T> queue;
 	int item_count;
 	size_t capacity;
 	std::mutex mtx; 
@@ -67,7 +67,8 @@ void producer(MyConcurrentQueue<int>& q, int id) {
 	int produce_times = dist(gen); 
 	std::cout << "Producer " << id << " will produce " << produce_times << " TIMES.\n"; 
 	for (int i = 0; i < produce_times; ++i) { 
-		q.put(id, 15); 
+		std::vector<int> items(15,1);
+		q.put(id, items); 
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	} 
@@ -76,7 +77,8 @@ void producer(MyConcurrentQueue<int>& q, int id) {
 
 
 void consumer(MyConcurrentQueue<int>& q, int id) { 
-	while (q.get(id)) { 
+	int item;
+	while (q.get(id,item)) { 
 		std::this_thread::sleep_for(std::chrono::milliseconds(300)); 
 	} 
 	std::cout << "Consumer" << id << "finished consuming." << std::endl;
