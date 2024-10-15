@@ -7,7 +7,7 @@
 void initialize_matrix(float* matrix, int N) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            matrix[i * N + j] = (float)rand() / RAND_MAX; // 生成小于 1.0 的浮点数
+            matrix[i * N + j] = (float)rand() / RAND_MAX; 
         }
     }
 }
@@ -27,15 +27,15 @@ void matrix_multiply_sequential(float* A, float* B, float* C, int N) {
 void matrix_multiply_vsx(float* A, float* B, float* C, int N) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            vector float c = {0.0f, 0.0f, 0.0f, 0.0f}; // 初始化 C 的向量值
-            for (int k = 0; k < N; k += 4) { // 每次处理 4 个元素
-                vector float a = vec_ld(0, &A[i * N + k]); // 加载 A 矩阵的行
-                vector float b = vec_ld(0, &B[k * N + j]); // 加载 B 矩阵的列
-                c = vec_madd(a, b, c); // C += A*B
+            vector float c = {0.0f, 0.0f, 0.0f, 0.0f}; 
+            for (int k = 0; k < N; k += 4) { 
+                vector float a = vec_ld(0, &A[i * N + k]); 
+                vector float b = vec_ld(0, &B[k * N + j]); 
+                c = vec_madd(a, b, c); 
             }
             float result[4];
             vec_st(c, 0, result); // 将 VSX 结果存储回内存
-            C[i * N + j] = result[0] + result[1] + result[2] + result[3]; // 累加得到最终结果
+            C[i * N + j] = result[0] + result[1] + result[2] + result[3]; 
         }
     }
 }
