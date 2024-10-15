@@ -3,7 +3,7 @@
 #include <time.h>
 #include <altivec.h> // 包含 VSX 指令集的头文件
 
-// 初始化矩阵，使用较小的数值 (< 1.0)
+
 void initialize_matrix(float* matrix, int N) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
@@ -12,7 +12,6 @@ void initialize_matrix(float* matrix, int N) {
     }
 }
 
-// 顺序矩阵乘法
 void matrix_multiply_sequential(float* A, float* B, float* C, int N) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
@@ -24,7 +23,7 @@ void matrix_multiply_sequential(float* A, float* B, float* C, int N) {
     }
 }
 
-// 使用 VSX 进行向量化矩阵乘法
+
 void matrix_multiply_vsx(float* A, float* B, float* C, int N) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
@@ -41,7 +40,6 @@ void matrix_multiply_vsx(float* A, float* B, float* C, int N) {
     }
 }
 
-// 计时函数，返回执行时间（秒）
 double get_time_in_seconds(struct timespec start, struct timespec end) {
     return (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 }
@@ -55,11 +53,9 @@ int main() {
       float* C_seq = (float*)aligned_alloc(32, N[i] * N[i] * sizeof(float));
       float* C_vsx = (float*)aligned_alloc(32, N[i] * N[i] * sizeof(float));
 
-      // 初始化矩阵 A 和 B
       initialize_matrix(A, N[i]);
       initialize_matrix(B, N[i]);
 
-      // 顺序矩阵乘法
       struct timespec start, end;
       clock_gettime(CLOCK_MONOTONIC, &start);
       matrix_multiply_sequential(A, B, C_seq, N[i]);
@@ -74,7 +70,6 @@ int main() {
       double vsx_time = get_time_in_seconds(start, end);
       printf("VSX version time: %.6f seconds\n", vsx_time);
 
-      // 结果验证
       int correct = 1;
       for (int i = 0; i < N[i]; i++) {
           for (int j = 0; j < N[i]; j++) {
@@ -91,7 +86,6 @@ int main() {
           printf("Results are incorrect!\n");
       }
 
-      // 释放内存
       free(A);
       free(B);
       free(C_seq);
