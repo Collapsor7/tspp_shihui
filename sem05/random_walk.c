@@ -3,7 +3,7 @@
 #include <omp.h>
 #include <time.h>
 
-int random_walk(int a, int b, int x, double p, int *steps);
+int random_walk(int a, int b, int x, double p, int *steps,unsigned int *seed);
 void simulate_walks(int a, int b, int x, double p, int N, int P, double *reach_b_prob, double *avg_time);
 
 int main(int argc, char *argv[]) {
@@ -50,10 +50,10 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-int random_walk(int a, int b, int x, double p, int *steps) {
+int random_walk(int a, int b, int x, double p, int *steps, unsigned int *seed) {
     *steps = 0;
     while (x > a && x < b) {
-        x += (rand() / (double)RAND_MAX) < p ? 1 : -1;
+        x += (rand_r(seed) / (double)RAND_MAX) < p ? 1 : -1;
         (*steps)++;
     }
     return x >= b;
@@ -66,8 +66,9 @@ void simulate_walks(int a, int b, int x, double p, int N, int P, double *reach_b
     
     #pragma omp parallel for num_threads(P) reduction(+:count_b, total_time)
     for (int i = 0; i < N; i++) {
+        unsigned int seed = (unsigned int)time(NULL) ^ omp_get_thread_num();
         int steps = 0;
-        int reached_b = random_walk(a, b, x, p, &steps);
+        int reached_b = random_walk(a, b, x, p, &steps , &seed);
         total_time += steps;
         
         if (reached_b) {

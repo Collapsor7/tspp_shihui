@@ -29,22 +29,28 @@ void matrix_multiply_sequential(double* A, double* B, double* C, int N) {
 }
 
 void matrix_multiply_avx(double* A, double* B, double* C, int N) {
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            __m256d c = _mm256_setzero_pd();
-            for (int k = 0; k < N; k += 4) {
-                __m256d a = _mm256_loadu_pd(&A[i * N + k]); 
-                //print_m256d(a,"a");
-                __m256d b = _mm256_loadu_pd(&B[k * N + j]); 
-                //print_m256d(b,"b");
-                c = _mm256_add_pd(c, _mm256_mul_pd(a, b)); // C += A*B
-                //print_m256d(c,"c");
-            }
-            double result[4];
-            _mm256_storeu_pd(result, c); 
-            C[i * N + j] = result[0] + result[1] + result[2] + result[3]; 
+  for (int i = 0; i < N; i++) {
+    for (int j = 0; j < N; j++) {
+      __m256d c = _mm256_setzero_pd();
+      int k = 0;
+      for (; k <= N - 4; k += 4) {
+        __m256d a = _mm256_loadu_pd(&A[i * N + k]);
+        __m256d b = _mm256_set_pd(B[(k+3) * N + j],
+                                  B[(k+2) * N + j],
+                                  B[(k+1) * N + j],
+                                  B[k * N + j]);
+        c = _mm256_add_pd(c, _mm256_mul_pd(a, b)); // C += A*B
+      }
+
+      double sum = 0.0;
+      for (; k < N; k++) {
+          sum += A[i * N + k] * B[k * N + j];
         }
+      double result[4];
+      _mm256_storeu_pd(result, c);
+      C[i * N + j] = result[0] + result[1] + result[2] + result[3] + sum;
     }
+  }
 }
 
 double get_time_in_seconds(struct timespec start, struct timespec end) {
