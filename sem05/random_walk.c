@@ -6,46 +6,55 @@
 int random_walk(int a, int b, int x, double p, int *steps,unsigned int *seed);
 void simulate_walks(int a, int b, int x, double p, int N, int P, double *reach_b_prob, double *avg_time);
 
-int main(int argc, char *argv[]) {
-    
-    if (argc < 7) {
-        printf("Usage: %s <a> <b> <p> <x> <N> <P>\n", argv[0]);
-        return 1;
+int main() {
+
+    int a = 0;
+    int b = 1000;
+    double p = 0.5;
+    int x = 500;
+    int N_sizes[3] = {1000,10000,100000};
+    int P_sizes[5] = {1,2,4,8,16};
+    double T_sizes[5];
+    double S_sizes[5];
+    double E_sizes[5];
+    for (int m = 0 ; m < 3; m++){
+      for (int n = 0; n < 5 ; n++){
+        printf("now N = %d , P = %d \n", N_sizes[m],P_sizes[n]);
+        omp_set_num_threads(n);
+
+        double reach_b_prob_par = 0.0, avg_time_par = 0.0;
+        
+        double start_time = omp_get_wtime();
+        simulate_walks(a, b, x, p, N_sizes[m], P_sizes[n], &reach_b_prob_par, &avg_time_par);
+        double end_time = omp_get_wtime();
+        double T = end_time - start_time;
+        printf("Probability of reaching b (Sequential): %f\n", reach_b_prob_par);
+        printf("Average time of walk (Sequential): %f\n", avg_time_par);
+        printf("Parallel execution time (T): %f seconds\n", T);
+        
+        T_sizes[n] = T;
+      }
+      printf("---------------------------------------------\n");
+      printf("Sum_List Execution time: ");
+      for(int i = 0; i < 5;i++){
+        printf("%f ",T_sizes[i]);
+      }
+      printf("\n");
+      for( int i = 0 ;i < 5; i++){
+        S_sizes[i]=T_sizes[0] / T_sizes[i];
+        E_sizes[i]=S_sizes[i] / (double)(i+1);
+      }
+      printf("Speed (S):");
+      for(int i = 0; i < 5;i++){
+        printf("%f ",S_sizes[i]);
+      }
+      printf("\n");
+      printf("Parallel efficiency (E): ");
+      for(int i = 0; i < 5;i++){
+        printf("%f ",E_sizes[i]);
+      }
+      printf("\n");
     }
-
-    int a = atoi(argv[1]);
-    int b = atoi(argv[2]);
-    double p = atof(argv[3]);
-    int x = atoi(argv[4]);
-    int N = atoi(argv[5]);
-    int P = atoi(argv[6]);
-     
-    omp_set_num_threads(1);
-
-    double reach_b_prob = 0.0, avg_time = 0.0;
-    
-    double start_time = omp_get_wtime();
-    simulate_walks(a, b, x, p, N, 1, &reach_b_prob, &avg_time);
-    double end_time = omp_get_wtime();
-    double T_seq = end_time-start_time;
-    omp_set_num_threads(P);
-
-    reach_b_prob = 0.0, avg_time = 0.0;
-    
-    start_time = omp_get_wtime();
-    simulate_walks(a, b, x, p, N, P, &reach_b_prob, &avg_time);
-    end_time = omp_get_wtime();
-    double T_par = end_time - start_time;    
-    
-    
-    double S = T_seq / T_par;
-    double E = S / P;
-
-    printf("Probability of reaching b: %f\n", reach_b_prob);
-    printf("Average time of walk: %f\n", avg_time);
-    printf("Parallel execution time (T): %f seconds\n", T_par);
-    printf("Speed (S): %f\n", S);
-    printf("Parallel efficiency (E): %f\n", E);
 
     return 0;
 }
