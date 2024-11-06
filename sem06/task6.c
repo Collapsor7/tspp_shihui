@@ -78,14 +78,14 @@ int main() {
       {
           #pragma omp single
           {
-            int chunk_size = N / P;
-            for (int n = 0; n < P ;n++){
-              int left = n * chunk_size;
-              int right = (n == P -1) ? (N - 1) : (left + chunk_size - 1);
-              #pragma omp task shared(array)
-              parallel_merge_sort(array, left, right);
-            }
-         
+            // int chunk_size = N / P;
+            // for (int n = 0; n < P ;n++){
+            //   int left = n * chunk_size;
+            //   int right = (n == P -1) ? (N - 1) : (left + chunk_size - 1);
+            //   #pragma omp task shared(array)
+            //   parallel_merge_sort(array, left, right);
+            // }
+            parallel_merge_sort(array,0,N-1);
           }
           
       }
