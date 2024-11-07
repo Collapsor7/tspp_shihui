@@ -80,7 +80,7 @@ void simulate_walks(int a, int b, int x, double p, int N, int P, double *reach_b
 
     #pragma omp parallel for num_threads(P) reduction(+:count_b, total_time)
     for (int i = 0; i < N; i++) {
-        unsigned int seed = time_global + omp_get_thread_num(); 
+        // unsigned int seed = time_global + omp_get_thread_num(); 
         int steps = 0;
         int reached_b = random_walk(a, b, x, p, &steps, &seed);
         total_time += steps;
