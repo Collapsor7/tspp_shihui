@@ -60,6 +60,7 @@ int main(int argc, char *argv[]) {
     
     local_grid = (double*)malloc((local_N + 2) * N * sizeof(double));
     next_grid = (double*)malloc((local_N + 2) * N * sizeof(double));
+
     if (local_grid == NULL || next_grid == NULL) {
         fprintf(stderr, "Memory allocation failed on rank %d\n", rank);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
@@ -83,19 +84,16 @@ int main(int argc, char *argv[]) {
 
         norm = compute_norm(local_grid, next_grid, local_N, N);
 
-        MPI_Request requests[4];
-        int request_count = 0;
-
         if (rank > 0) {
-            MPI_Isend(local_grid + N, N, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, &requests[request_count++]);
-            MPI_Irecv(local_grid, N, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, &requests[request_count++]);
+            MPI_Send(local_grid + N, N, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD );
+            MPI_Recv(local_grid, N, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (rank < size - 1) {
-            MPI_Isend(local_grid + local_N * N, N, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, &requests[request_count++]);
-            MPI_Irecv(local_grid + (local_N + 1) * N, N, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, &requests[request_count++]);
+            MPI_Send(local_grid + local_N * N, N, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
+            MPI_Recv(local_grid + (local_N + 1) * N, N, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
 
-        MPI_Waitall(request_count, requests, MPI_STATUSES_IGNORE);
+        //MPI_Waitall(request_count, requests, MPI_STATUSES_IGNORE);
 
         temp_grid = local_grid;
         local_grid = next_grid;
