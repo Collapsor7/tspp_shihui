@@ -46,6 +46,7 @@ int main(int argc, char *argv[]) {
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Status status;
 
     int base_local_N = N / size;
     int remainder = N % size;
@@ -79,6 +80,7 @@ int main(int argc, char *argv[]) {
 
     double start_time = MPI_Wtime();
 
+    //Jocobi iterations
     for (iter = 0; iter < MAX_ITER; iter++) {
         jacobi_update(local_grid, next_grid, local_N, N);
 
@@ -86,15 +88,20 @@ int main(int argc, char *argv[]) {
 
         if (rank > 0) {
             MPI_Send(local_grid + N, N, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD );
-            MPI_Recv(local_grid, N, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(local_grid, N, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD,&status);
+           
         }
         if (rank < size - 1) {
+
+            MPI_Recv(local_grid + (local_N + 1) * N, N, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, &status);
             MPI_Send(local_grid + local_N * N, N, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
-            MPI_Recv(local_grid + (local_N + 1) * N, N, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            
         }
 
         //MPI_Waitall(request_count, requests, MPI_STATUSES_IGNORE);
-
+        double global_norm;
+        MPI_Allreduce(&norm,&global_norm,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+        
         temp_grid = local_grid;
         local_grid = next_grid;
         next_grid = temp_grid;
@@ -127,6 +134,7 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
 
 
 
