@@ -82,10 +82,7 @@ int main(int argc, char *argv[]) {
 
     //Jocobi iterations
     for (iter = 0; iter < MAX_ITER; iter++) {
-        jacobi_update(local_grid, next_grid, local_N, N);
-
-        norm = compute_norm(local_grid, next_grid, local_N, N);
-
+      
         if (rank > 0) {
             MPI_Send(local_grid + N, N, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD );
             MPI_Recv(local_grid, N, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD,&status);
@@ -97,6 +94,10 @@ int main(int argc, char *argv[]) {
             MPI_Send(local_grid + local_N * N, N, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
             
         }
+        
+        jacobi_update(local_grid, next_grid, local_N, N);
+
+        norm = compute_norm(local_grid, next_grid, local_N, N);
 
         //MPI_Waitall(request_count, requests, MPI_STATUSES_IGNORE);
         double global_norm;
