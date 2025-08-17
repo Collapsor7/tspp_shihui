@@ -1,4 +1,4 @@
-# tspp
+# tspp 高并发编程
 记录了一些在2024.11 ～ 2025.1期间一高并发编程的任务  
 sem01 使用pthreads库多线程计算数量pi  
 sem02 实现MyConcurrentQueue类  
